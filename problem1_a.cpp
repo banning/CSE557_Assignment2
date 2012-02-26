@@ -8,10 +8,12 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
+#include <iostream>
 using namespace std;
 
 void calculateLatency();
+double  tsFloat (timespec  time);
 
 int main (int argc, char *argv[])
 {
@@ -37,33 +39,50 @@ void calculateLatency()
 	char* y[iInitialSize];
 	int iSize = iInitialSize;
 	int iDotProd = 0;
+	timespec start, end;
+	double timerOutput;
+
+	int rank, size;
+	MPI_Status status;
+
+	// Find rank and number of processors
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	//fill x and y with 1s
 	for (int j = 0; j < iMaxSize; j++)
-		x[j] = 1;
+		x[j] = "1";
 
 	for (int k = 0; k < iMaxSize; k++)
-		y[k] = 1;
+		y[k] = "1";
 
 	// Intialize array to save output
 	int iOutputSize = 1000;
-	int* iTimerStats[iOutputSize];
+	double iTimerStats[iOutputSize];
 	iOutputSize = 0;
 
 	// Loop until array is 100,000,000
 	while (iSize < iMaxSize)
 	{
-		//timer start
+		// Timer start
+		MPI_Barrier(MPI_COMM_WORLD);
+		clock_gettime(CLOCK_REALTIME, &start);
+
 		for (int i = 0; i < iNumIterations; i++)
 		{
 			for (int z = 0; z < iSize; z++)
 			{
-				iDotProd = iDotProd + x[z] * y[z];
+				iDotProd = iDotProd + atoi(x[z]) * atoi(y[z]);
 			}
 		}
-		//timer stop	
 
-		//iTimerStats[iOutputSize] = timerOutput;
+		// Timer stop
+		MPI_Barrier(MPI_COMM_WORLD);
+		clock_gettime(CLOCK_REALTIME, &end);
+		timerOutput = tsFloat(end)-tsFloat(start);
+
+		// Add timer result to output array
+		iTimerStats[iOutputSize] = timerOutput;
 		iOutputSize++;
 
 		iSize = iSize + iIncrement;
@@ -72,8 +91,12 @@ void calculateLatency()
 	}
 
 	// Output statistics
-	for (int m; m < iOutputSize; m++)
+	for (int m = 0; m < iOutputSize; m++)
 		cout <<iTimerStats[m] <<endl;
+}
 
-	return 0;
+double  tsFloat (timespec  time)
+{
+    return ((double) time.tv_sec + (time.tv_nsec / 1000000000.0)) ;
+
 }
