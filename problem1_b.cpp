@@ -31,13 +31,12 @@ int main (int argc, char *argv[])
 void calculateLatency()
 {
 	// Intialize variables for testing
-	int iInitialSize = 100000000;
 	int iNumIterations = 10000;
 	int iIncrement = 1024;
 	int iMaxSize = 100000000;
-	char* x[iInitialSize];
-	char* y[iInitialSize];
-	int iSize = iInitialSize;
+	char* x = new char[iMaxSize];
+	char* y = new char[iMaxSize];
+	int iSize = iMaxSize;
 	int iDotProd = 0;
 	timespec start, end;
 	double timerOutput;
@@ -51,45 +50,36 @@ void calculateLatency()
 
 	//fill x and y with 1s
 	for (int j = 0; j < iMaxSize; j++)
-		x[j] = "1";
+		x[j] = '1';
 
 	for (int k = 0; k < iMaxSize; k++)
-		y[k] = "1";
+		y[k] = '1';
 
 	// Intialize array to save output
-	int iOutputSize = 1000;
-	double iTimerStats[iOutputSize];
-	iOutputSize = 0;
+	double* iTimerStats = new double[iMaxSize/iIncrement];
+	int iOutputSize = 0;
 
-	// Loop until array is 100,000,000
-	while (iSize < iMaxSize)
+	for (int i = 0; i < iNumIterations; i++)
 	{
 		// Timer start
-		MPI_Barrier(MPI_COMM_WORLD);
+		//MPI_Barrier(MPI_COMM_WORLD);
 		clock_gettime(CLOCK_REALTIME, &start);
-		
-		for (int i = 0; i < iNumIterations; i++)
+
+		for (int z = 0; z < iMaxSize; z++)
 		{
-			for (int z = 0; z < iInitialSize; z++)
-			{
-				//Ww1 = random_number(0 to 1) * iSize
-				//Ww2 = random_number(0 to 1) * iSize
-				//iDotProd = iDotProd + atoi(x[Ww1]) * atoi(y[Ww2]);
-			}
+			//Ww1 = random_number(0 to 1) * iSize
+			//Ww2 = random_number(0 to 1) * iSize
+			//iDotProd = iDotProd + atoi(&x[Ww1]) * atoi(&y[Ww2]);
 		}
 
 		// Timer stop
-		MPI_Barrier(MPI_COMM_WORLD);
+		//MPI_Barrier(MPI_COMM_WORLD);
 		clock_gettime(CLOCK_REALTIME, &end);
 		timerOutput = tsFloat(end)-tsFloat(start);
 
 		// Add timer result to output array
 		iTimerStats[iOutputSize] = timerOutput;
 		iOutputSize++;
-
-		// iSize = iSize + iIncrement;
-		// if (iSize > 1024 && iIncrement == 1024)
-		// 	iIncrement = 100 * iIncrement;
 	}
 
 	// Output statistics
