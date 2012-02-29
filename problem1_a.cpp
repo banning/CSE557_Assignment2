@@ -34,9 +34,9 @@ void calculateLatency()
 	int iInitialSize = 1024;
 	int iNumIterations = 10000;
 	int iIncrement = 1024;
-	int iMaxSize = 100000000;
-	char *x = new char[iMaxSize];
-	char *y = new char[iMaxSize];
+	int iMaxSize = 10000000;
+	int *x = new int[iMaxSize];
+	int *y = new int[iMaxSize];
 	int iSize = iInitialSize;
 	int iDotProd = 0;
 	timespec start, end;
@@ -51,13 +51,14 @@ void calculateLatency()
 
 	//fill x and y with 1s
 	for (int j = 0; j < iMaxSize; j++)
-		x[j] = '1';
+		x[j] = 1;
 
 	for (int k = 0; k < iMaxSize; k++)
-		y[k] = '1';
+		y[k] = 1;
 
 	// Intialize array to save output
 	double *iTimerStats = new double[iMaxSize/iIncrement];
+	int *iTimerSize = new int[iMaxSize/iIncrement];
 	int iOutputSize = 0;
 
 	// Loop until array is 100,000,000
@@ -71,7 +72,7 @@ void calculateLatency()
 		{
 			for (int z = 0; z < iSize; z++)
 			{
-				iDotProd = iDotProd + atoi(&x[z]) * atoi(&y[z]);
+				iDotProd = iDotProd + x[z] * y[z];
 			}
 		}
 
@@ -82,6 +83,7 @@ void calculateLatency()
 
 		// Add timer result to output array
 		iTimerStats[iOutputSize] = timerOutput;
+		iTimerSize[iOutputSize] = iSize;
 		iOutputSize++;
 
 		iSize = iSize + iIncrement;
@@ -89,9 +91,12 @@ void calculateLatency()
 			iIncrement = 100 * iIncrement;
 	}
 
-	// Output statistics
-	for (int m = 0; m < iOutputSize; m++)
-		cout <<iTimerStats[m] <<endl;
+	if (rank == 0)
+	{
+		// Output statistics
+		for (int m = 0; m < iOutputSize; m++)
+			cout <<iTimerStats[m] <<"," <<iTimerSize[m] <<endl;
+	}
 }
 
 double  tsFloat (timespec  time)
