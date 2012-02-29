@@ -37,6 +37,7 @@ void calculateLatency()
 	int* x = new int[iMaxSize];
 	int* y = new int[iMaxSize];
 	int iSize = iMaxSize;
+	int Ww1, Ww2;
 	int iDotProd = 0;
 	timespec start, end;
 	double timerOutput;
@@ -57,19 +58,21 @@ void calculateLatency()
 
 	// Intialize array to save output
 	double* iTimerStats = new double[iMaxSize/iIncrement];
+	int *iTimerSize = new int[iMaxSize/iIncrement];
 	int iOutputSize = 0;
 
 	for (int i = 0; i < iNumIterations; i++)
 	{
 		// Timer start
 		//MPI_Barrier(MPI_COMM_WORLD);
+		srand ( time(NULL) );
 		clock_gettime(CLOCK_REALTIME, &start);
 
 		for (int z = 0; z < iMaxSize; z++)
 		{
-			//Ww1 = random_number(0 to 1) * iSize
-			//Ww2 = random_number(0 to 1) * iSize
-			//iDotProd = iDotProd + &x[Ww1] * &y[Ww2];
+			Ww1 = rand()%1 * iSize;
+			Ww2 = rand()%1 * iSize;
+			iDotProd = iDotProd + x[Ww1] * y[Ww2];
 		}
 
 		// Timer stop
@@ -79,6 +82,7 @@ void calculateLatency()
 
 		// Add timer result to output array
 		iTimerStats[iOutputSize] = timerOutput;
+		iTimerSize[iOutputSize] = iSize;
 		iOutputSize++;
 	}
 
