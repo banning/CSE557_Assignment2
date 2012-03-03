@@ -100,6 +100,7 @@ void calculateLatency()
 
 		// Output statistics
 		cout <<"Timer,Adjusted,Size" <<endl;
+		cout<<"0," <<baseTimer <<"," <<iSize <<endl;
 		for (int m = 0; m < iNumIterations; m++)
 			cout <<iTimerStats[m] <<"," <<iTimerAdjusted[m] <<"," <<iSize <<endl;
 	}
