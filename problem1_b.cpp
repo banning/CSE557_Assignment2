@@ -30,72 +30,65 @@ int main (int argc, char *argv[])
 // Calculate random access latency
 void calculateLatency()
 {
-	// Intialize variables for testing
-	int iNumIterations = 10000;
-	int iIncrement = 1024;
-	int iMaxSize = 10000000;
-	int* x = new int[iMaxSize];
-	int* y = new int[iMaxSize];
-	int iSize = iMaxSize;
-	int Ww1, Ww2;
-	int iDotProd = 0;
-	timespec start, end;
-	double timerOutput;
-
+	// Find rank and number of processors
 	int rank, size;
 	MPI_Status status;
 
-	// Find rank and number of processors
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	//fill x and y with 1s
-	for (int j = 0; j < iMaxSize; j++)
-		x[j] = 1;
-
-	for (int k = 0; k < iMaxSize; k++)
-		y[k] = 1;
-
-	// Intialize array to save output
-	double* iTimerStats = new double[iMaxSize/iIncrement];
-	int *iTimerSize = new int[iMaxSize/iIncrement];
-	int iOutputSize = 0;
-
-	for (int i = 0; i < iNumIterations; i++)
-	{
-		// Timer start
-		//MPI_Barrier(MPI_COMM_WORLD);
-		srand ( time(NULL) );
-		clock_gettime(CLOCK_REALTIME, &start);
-
-		for (int z = 0; z < iMaxSize; z++)
-		{
-			Ww1 = rand()%1 * iSize;
-			Ww2 = rand()%1 * iSize;
-			iDotProd = iDotProd + x[Ww1] * y[Ww2];
-		}
-
-		// Timer stop
-		//MPI_Barrier(MPI_COMM_WORLD);
-		clock_gettime(CLOCK_REALTIME, &end);
-		timerOutput = tsFloat(end)-tsFloat(start);
-
-		// Add timer result to output array
-		iTimerStats[iOutputSize] = timerOutput;
-		iTimerSize[iOutputSize] = iSize;
-		iOutputSize++;
-	}
-
+	// Single threaded
 	if (rank == 0)
 	{
+		// Intialize variables for testing
+		int iNumIterations = 10000;
+		int iIncrement = 1024;
+		int iMaxSize = 5000000;
+		int* x = new int[iMaxSize];
+		int* y = new int[iMaxSize];
+		int iSize = iMaxSize;
+		int Ww1, Ww2;
+		int iDotProd = 0;
+		double start, end;
+
+		//fill x and y with 1s
+		for (int j = 0; j < iMaxSize; j++)
+			x[j] = 1;
+
+		for (int k = 0; k < iMaxSize; k++)
+			y[k] = 1;
+
+		// Intialize array to save output
+		double* iTimerStats = new double[iMaxSize/iIncrement];
+		int *iTimerSize = new int[iMaxSize/iIncrement];
+		int iOutputSize = 0;
+
+		for (int i = 0; i < iNumIterations; i++)
+		{
+			// Timer start
+			//MPI_Barrier(MPI_COMM_WORLD);
+			srand ( time(NULL) );
+			start = MPI_Wtime();
+
+			for (int z = 0; z < iMaxSize; z++)
+			{
+				Ww1 = rand()%1 * iSize;
+				Ww2 = rand()%1 * iSize;
+				iDotProd = iDotProd + x[Ww1] * y[Ww2];
+			}
+
+			// Timer stop
+			//MPI_Barrier(MPI_COMM_WORLD);
+			end = MPI_Wtime();
+
+			// Add timer result to output array
+			iTimerStats[iOutputSize] = end - start;
+			iTimerSize[iOutputSize] = iSize;
+			iOutputSize++;
+		}
+
 		// Output statistics
 		for (int m = 0; m < iOutputSize; m++)
 			cout <<iTimerStats[m] <<"," <<iTimerSize[m] <<endl;
 	}
-}
-
-double  tsFloat (timespec  time)
-{
-    return ((double) time.tv_sec + (time.tv_nsec / 1000000000.0)) ;
-
 }
