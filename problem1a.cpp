@@ -1,5 +1,5 @@
 // CSE557 Assignment 2
-// Problem 1_a
+// Problem 1a
 // Calculate cache size and average access latencies
 // 03/12/12
 // Mike Banning

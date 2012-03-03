@@ -1,5 +1,5 @@
 // CSE557 Assignment 2
-// Problem 1_b
+// Problem 1b
 // Calculate random access latency
 // 03/12/12
 // Mike Banning
@@ -47,8 +47,9 @@ void calculateLatency()
 		int* x = new int[iMaxSize];
 		int* y = new int[iMaxSize];
 		int iSize = iMaxSize;
-		int iDotProd, Ww1, Ww2;
-		double start, end;
+		int iDotProd = 0;
+		int Ww1, Ww2;
+		double baseTimer, start, end;
 
 		//fill x and y with 1s
 		for (int j = 0; j < iMaxSize; j++)
