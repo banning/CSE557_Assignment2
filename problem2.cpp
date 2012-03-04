@@ -22,7 +22,7 @@ void Bandwidth()
    MPI_Status status;
 
    source=0;
-   for (int destination = source+1; destination < size; destination++)
+   for (int destination = 0; destination < size; destination++)
    {
       //clock_gettime(CLOCK_REALTIME, &start);
       start=MPI_Wtime();
@@ -54,7 +54,7 @@ void Bandwidth()
    if (rank==0)
    {
       cout<<"Timing data is as follows\n";
-      for (int i = 1; i < size; i++)
+      for (int i = 0; i < size; i++)
       {
          cout<<"destination "<<i<<" time:" <<difList[i]<<'\n';
       }
