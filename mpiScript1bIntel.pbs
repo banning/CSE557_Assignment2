@@ -1,12 +1,12 @@
 #PBS -l nodes=8
 #PBS -l mem=1Gb
-#PBS -l walltime=00:10:00
-#PBS -o ./stdout.txt
-#PBS -e ./stderr.txt
+#PBS -l walltime=02:00:00
+#PBS -o ./stdout1b_Intel.txt
+#PBS -e ./stderr1b_Intel.txt
 #PBS -V
 #PBS -q cse557
 
 cd /gpfs/home/mab615/CSE557/assign2
 module load openmpi/intel/1.4.2
 
-mpirun ./problem1_b
+mpirun ./problem1b
