@@ -67,7 +67,10 @@ void calculateLatency()
 		srand ( time(NULL) );
 		start = MPI_Wtime();
 
-		iDotProd = iDotProd + x[0] * y[0];
+		for (int n = 0; n < iMaxSize; n++)
+		{
+			iDotProd = iDotProd + x[n] * y[n];
+		}
 
 		// Timer stop
 		end = MPI_Wtime();

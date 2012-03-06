@@ -1,5 +1,0 @@
-module load openmpi/intel/1.4.2
-mpicc problem1_a.cpp -o problem1_a -lrt
-mpicc problem1_b.cpp -o problem1_b -lrt
-mpicc problem2.cpp -o problem2
-mpicc problem3.cpp -o problem3
