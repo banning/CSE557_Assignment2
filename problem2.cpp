@@ -4,11 +4,6 @@
 #include <sys/time.h>
 using namespace std;
 
-double  tsFloat (timespec  time)
-{
-    return ((double) time.tv_sec + (time.tv_nsec / 1000000000.0)) ;
-
-} 
 
 // Implement HyperQuicksort
 void Bandwidth()
@@ -24,7 +19,7 @@ void Bandwidth()
    source=0;
    for (int destination = 0; destination < size; destination++)
    {
-      //clock_gettime(CLOCK_REALTIME, &start);
+      MPI_Barrier(MPI_COMM_WORLD);
       start=MPI_Wtime();
       if (rank == source || rank == destination)
       {
