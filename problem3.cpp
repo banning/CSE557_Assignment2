@@ -1,4 +1,4 @@
-#include <mpi.h>
+ #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -10,78 +10,64 @@ void Bandwidth()
    int rank, size, source, destination;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   MPI_Status status;
-   int * token = new int[5];
+   int * token = new int(5);
    double start, end;
-   int iterations=1;
+   int iterations=10;
+   MPI_Request request;
+   MPI_Status status;
    int initial_size=1048576;
-   int max_size=104857060;
+   int max_size=10485760;
    int increment=1048576;
-   int message_size=0;
-   int actual_size=0;
-
-   int listsize = (max_size/increment)*(size-1);
-   double * outputList = new double[listsize];
-   int data_save = 0;
-   int data_increment = max_size/increment;
-
-   // Set 0 as lead (source) processor
+   double difList[(max_size-initial_size)/increment][size];
    source=0;
-
-   // Perform timing test to all processors
-   for (int destination = 1; destination < size; destination++)
+   for (int destination = 0; destination < size; destination++)
    {
-      MPI_Barrier(MPI_COMM_WORLD);
-
-      if (destination > 1 && rank == 0)
-         data_save = destination - 1 + data_increment;
-
-      for (message_size = initial_size; message_size <= max_size; message_size += increment)
+      if (rank == source || rank == destination)
       {
-         actual_size = message_size/sizeof(MPI_INT);
-         delete [] token;
-         token = new int[actual_size];
-         std::fill_n(token, actual_size, 0);
-
-         // Start timing
-         start=MPI_Wtime();
-         for (int i = 0; i < iterations; i++)
+         for (int m_size=initial_size; m_size<=max_size; m_size= m_size + increment)
          {
-            // Check if lead processor
-            if (rank == source)
+            token = new int(m_size/sizeof(MPI_INT));
+            start=MPI_Wtime();
+            for (int i = 0; i < iterations; i++)
             {
-               // Send message and wait for acknowledgement
-               MPI_Send(token, actual_size, MPI_INT, destination, 0, MPI_COMM_WORLD);
-               MPI_Recv(token, actual_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
+               // Check if lead processor
+               if (rank == source)
+               {
+                  //Broadcast listsize to all processors
+                  cout<<rank << " sending"<<endl;
+                  MPI_Isend(&token, m_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &request);
+                  cout<<"sent"<<endl;
+                  MPI_Recv(&token, m_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
+                  cout<<rank<<" received"<<endl;
+               }
+               else if (rank==destination)
+               {
+
+                  //Recieve listsize from lead processor
+
+                  MPI_Recv(&token, m_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+                                    cout<<rank << " received"<<endl;
+                  MPI_Isend(&token, m_size, MPI_INT, source, 0, MPI_COMM_WORLD, &request);
+               }
             }
-            else if (rank == destination)
-            {
-               // Receive message and send acknowledgement
-               MPI_Recv(token, actual_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-               MPI_Send(token, actual_size, MPI_INT, source, 0, MPI_COMM_WORLD);
+            if (rank==0)
+            {  
+               end=MPI_Wtime();
+               difList[(m_size-initial_size)/increment][destination]=end-start;
             }
          }
-         // End timing
-         end=MPI_Wtime();
-
-         // Write timing data to outputList
-         if (rank == 0)
-         {
-            outputList[data_save]=end-start;
-            data_save += 1;
-         }
-
       }
    }
-   
-   //Output statistics only if lead processor
-   if (rank == source)
+   if (rank==0)
    {
-      cout<<"data_increment: " <<data_increment <<endl;
-      cout<<"time" <<endl;;
-      for (int i = 1; i < listsize; i++)
+      cout<<"Timing data is as follows\n";
+      for (int i = 0; i < size; i++)
       {
-         cout <<outputList[i] <<endl;
+         cout<<"destination "<<i<<'\n';
+         for (int j = 0; j <= (max_size-initial_size)/increment; j++)
+         {
+            cout<<"Size: " << j*increment <<"\tTime: "<< difList[j][i]<<endl;
+         }
       }
    }
 }
