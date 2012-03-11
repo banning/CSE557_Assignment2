@@ -18,24 +18,22 @@ void Bandwidth()
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    int * token = new int(5);
    double start, end;
-   int iterations=1000;
+   int iterations=1;
    double difList[size];
    MPI_Status status;
    int initial_size=1048576;
-   int max_size=10485760;
+   int max_size=104857060;
    int increment=1048576;
 
    source=0;
    for (int destination = 0; destination < size; destination++)
    {
       MPI_Barrier(MPI_COMM_WORLD);
-
       if (rank == source || rank == destination)
       {
-         cout<<"hi"<<endl;
          for (int size=initial_size; size<=max_size; size= size + increment)
          {
-            token = new int(size/sizeof(int));
+            token = new int(size/sizeof(MPI_INT));
             start=MPI_Wtime();
             for (int i = 0; i < iterations; i++)
             {
@@ -45,15 +43,14 @@ void Bandwidth()
                   //Broadcast listsize to all processors
                   cout<<rank << " sending"<<endl;
                   MPI_Send(&token, size, MPI_INT, destination, 0, MPI_COMM_WORLD);
-                                    cout<<rank << " senT"<<endl;
                   MPI_Recv(&token, size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
                }
                else if (rank==destination)
                {
-                  cout<<rank << " receiving"<<endl;
+
                   //Recieve listsize from lead processor
                   MPI_Recv(&token, size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-                  cout<<rank << " in and out"<<endl;
+                  cout<<rank << " received"<<endl;
                   MPI_Send(&token, size, MPI_INT, source, 0, MPI_COMM_WORLD);
                }
             }
