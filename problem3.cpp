@@ -21,11 +21,14 @@ void Bandwidth()
    int actual_size=0;
 
    int listsize = (max_size/increment)*(size-1);
-   double * difList = new double[listsize];
+   double * outputList = new double[listsize];
    int data_save = 0;
    int data_increment = max_size/increment;
 
+   // Set 0 as lead (source) processor
    source=0;
+
+   // Perform timing test to all processors
    for (int destination = 1; destination < size; destination++)
    {
       MPI_Barrier(MPI_COMM_WORLD);
@@ -40,39 +43,45 @@ void Bandwidth()
          token = new int[actual_size];
          std::fill_n(token, actual_size, 0);
 
+         // Start timing
          start=MPI_Wtime();
          for (int i = 0; i < iterations; i++)
          {
             // Check if lead processor
             if (rank == source)
             {
+               // Send message and wait for acknowledgement
                MPI_Send(token, actual_size, MPI_INT, destination, 0, MPI_COMM_WORLD);
                MPI_Recv(token, actual_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
             }
             else if (rank == destination)
             {
+               // Receive message and send acknowledgement
                MPI_Recv(token, actual_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
                MPI_Send(token, actual_size, MPI_INT, source, 0, MPI_COMM_WORLD);
             }
          }
+         // End timing
          end=MPI_Wtime();
 
+         // Write timing data to outputList
          if (rank == 0)
          {
-            difList[data_save]=end-start;
+            outputList[data_save]=end-start;
             data_save += 1;
          }
 
       }
    }
    
-   if (rank==0)
+   //Output statistics only if lead processor
+   if (rank == source)
    {
       cout<<"data_increment: " <<data_increment <<endl;
-      cout<<"time";
+      cout<<"time" <<endl;;
       for (int i = 1; i < listsize; i++)
       {
-         cout <<difList[i] <<endl;
+         cout <<outputList[i] <<endl;
       }
    }
 }
