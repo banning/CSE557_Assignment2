@@ -4,72 +4,75 @@
 #include <sys/time.h>
 using namespace std;
 
-double tsFloat (timespec time)
-{
-    return ((double) time.tv_sec + (time.tv_nsec / 1000000000.0)) ;
-
-}
-
 // Implement HyperQuicksort
 void Bandwidth()
 {
    int rank, size, source, destination;
    MPI_Comm_size(MPI_COMM_WORLD, &size);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   int * token = new int(5);
+   MPI_Status status;
+   int * token = new int[5];
    double start, end;
    int iterations=1;
-   double difList[size];
-   MPI_Status status;
    int initial_size=1048576;
    int max_size=104857060;
    int increment=1048576;
    int message_size=0;
+   int actual_size=0;
+
+   int listsize = (max_size/increment)*(size-1);
+   double * difList = new double[listsize];
+   int data_save = 0;
+   int data_increment = max_size/increment;
 
    source=0;
-   for (int destination = 0; destination < size; destination++)
+   for (int destination = 1; destination < size; destination++)
    {
       MPI_Barrier(MPI_COMM_WORLD);
-      if (rank == source || rank == destination)
-      {
-         for (message_size = initial_size; message_size <= max_size; message_size += increment)
-         {
-            token = new int(message_size/sizeof(MPI_INT));
-            start=MPI_Wtime();
-            for (int i = 0; i < iterations; i++)
-            {
-               // Check if lead processor
-               if (rank == source)
-               {
-                  //Broadcast listsize to all processors
-                  cout<<rank << " sending"<<endl;
-                  MPI_Send(&token, message_size, MPI_INT, destination, 0, MPI_COMM_WORLD);
-                  MPI_Recv(&token, message_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
-               }
-               else if (rank==destination)
-               {
 
-                  //Recieve listsize from lead processor
-                  MPI_Recv(&token, message_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-                  cout<<rank << " received"<<endl;
-                  MPI_Send(&token, message_size, MPI_INT, source, 0, MPI_COMM_WORLD);
-               }
+      if (destination > 1 && rank == 0)
+         data_save = destination - 1 + data_increment;
+
+      for (message_size = initial_size; message_size <= max_size; message_size += increment)
+      {
+         actual_size = message_size/sizeof(MPI_INT);
+         delete [] token;
+         token = new int[actual_size];
+         std::fill_n(token, actual_size, 0);
+
+         start=MPI_Wtime();
+         for (int i = 0; i < iterations; i++)
+         {
+            // Check if lead processor
+            if (rank == source)
+            {
+               MPI_Send(token, actual_size, MPI_INT, destination, 0, MPI_COMM_WORLD);
+               MPI_Recv(token, actual_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
+            }
+            else if (rank == destination)
+            {
+               MPI_Recv(token, actual_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+               MPI_Send(token, actual_size, MPI_INT, source, 0, MPI_COMM_WORLD);
             }
          }
-         
-         if (rank==source)
+         end=MPI_Wtime();
+
+         if (rank == 0)
          {
-            end=MPI_Wtime();
-            difList[destination]=end-start;
+            difList[data_save]=end-start;
+            data_save += 1;
          }
+
       }
    }
+   
    if (rank==0)
    {
-      cout<<"Timing data is as follows\n";
-      for (int i = 0; i < size; i++)
+      cout<<"data_increment: " <<data_increment <<endl;
+      cout<<"time";
+      for (int i = 1; i < listsize; i++)
       {
-         cout<<"destination "<<i<<" time:" <<difList[i]<<'\n';
+         cout <<difList[i] <<endl;
       }
    }
 }
