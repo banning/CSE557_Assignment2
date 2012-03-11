@@ -24,6 +24,7 @@ void Bandwidth()
    int initial_size=1048576;
    int max_size=104857060;
    int increment=1048576;
+   int message_size=0;
 
    source=0;
    for (int destination = 0; destination < size; destination++)
@@ -31,9 +32,9 @@ void Bandwidth()
       MPI_Barrier(MPI_COMM_WORLD);
       if (rank == source || rank == destination)
       {
-         for (int size=initial_size; size<=max_size; size= size + increment)
+         for (message_size = initial_size; message_size <= max_size; message_size += increment)
          {
-            token = new int(size/sizeof(MPI_INT));
+            token = new int(message_size/sizeof(MPI_INT));
             start=MPI_Wtime();
             for (int i = 0; i < iterations; i++)
             {
@@ -42,25 +43,25 @@ void Bandwidth()
                {
                   //Broadcast listsize to all processors
                   cout<<rank << " sending"<<endl;
-                  MPI_Send(&token, size, MPI_INT, destination, 0, MPI_COMM_WORLD);
-                  MPI_Recv(&token, size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
+                  MPI_Send(&token, message_size, MPI_INT, destination, 0, MPI_COMM_WORLD);
+                  MPI_Recv(&token, message_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
                }
                else if (rank==destination)
                {
 
                   //Recieve listsize from lead processor
-                  MPI_Recv(&token, size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+                  MPI_Recv(&token, message_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
                   cout<<rank << " received"<<endl;
-                  MPI_Send(&token, size, MPI_INT, source, 0, MPI_COMM_WORLD);
+                  MPI_Send(&token, message_size, MPI_INT, source, 0, MPI_COMM_WORLD);
                }
             }
          }
-         /*
+         
          if (rank==source)
          {
             end=MPI_Wtime();
             difList[destination]=end-start;
-         }*/
+         }
       }
    }
    if (rank==0)
