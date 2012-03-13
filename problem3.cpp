@@ -1,4 +1,4 @@
- #include <mpi.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -15,18 +15,21 @@ void Bandwidth()
    int iterations=10;
    MPI_Request request;
    MPI_Status status;
-   int initial_size=1048576;
-   int max_size=10485760;
-   int increment=1048576;
+   int initial_size=1048765;
+   int max_size=10487650;
+   int increment=1048765;
    double difList[(max_size-initial_size)/increment][size];
    source=0;
+   //Runs through all possible destinations
    for (int destination = 0; destination < size; destination++)
    {
       if (rank == source || rank == destination)
       {
+         //Runs though the set of sizes
          for (int m_size=initial_size; m_size<=max_size; m_size= m_size + increment)
          {
-            token = new int(m_size/sizeof(MPI_INT));
+            //rescales token
+            int token[m_size/sizeof(MPI_INT)];
             start=MPI_Wtime();
             for (int i = 0; i < iterations; i++)
             {
@@ -34,20 +37,16 @@ void Bandwidth()
                if (rank == source)
                {
                   //Broadcast listsize to all processors
-                  cout<<rank << " sending"<<endl;
-                  MPI_Isend(&token, m_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &request);
-                  cout<<"sent"<<endl;
-                  MPI_Recv(&token, m_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
-                  cout<<rank<<" received"<<endl;
+                  MPI_Send(token, m_size, MPI_INT, destination, 0, MPI_COMM_WORLD);
+                  MPI_Recv(token, m_size, MPI_INT, destination, 0, MPI_COMM_WORLD, &status);
                }
                else if (rank==destination)
                {
 
                   //Recieve listsize from lead processor
 
-                  MPI_Recv(&token, m_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-                                    cout<<rank << " received"<<endl;
-                  MPI_Isend(&token, m_size, MPI_INT, source, 0, MPI_COMM_WORLD, &request);
+                  MPI_Recv(token, m_size, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+                  MPI_Send(token, m_size, MPI_INT, source, 0, MPI_COMM_WORLD);
                }
             }
             if (rank==0)
